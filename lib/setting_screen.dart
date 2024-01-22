@@ -206,6 +206,7 @@ class _SettingScreenState extends State<SettingScreen> {
         showCustomToast(context, inputKey, "실패: ${result.stderr}");
       }
     } catch (e) {
+      print('Error: $e');
       showCustomToast(context, inputKey, '오류: $e');
     }
   }
@@ -222,7 +223,7 @@ class _SettingScreenState extends State<SettingScreen> {
 
       var result = await Process.run(
           'cmd',
-          ['/c', 'gradlew', 'runParallelTests'],
+          ['/c', 'gradlew', 'runParallelTestsForInstall'],
           workingDirectory: _selectedDirectory
       );
       if (result.exitCode == 0) {

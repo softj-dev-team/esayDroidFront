@@ -89,39 +89,41 @@ class _LoginPageState extends State<LoginPage> {
   void _login() async {
     String email = emailController.text;
     String password = passwordController.text;
+
     // 이메일과 비밀번호 유효성 검사
     if (email.isEmpty || password.isEmpty) {
-      showCustomToast(context,inputKey, "이메일과 비밀번호를 모두 입력해주세요.");
+      showCustomToast(context, inputKey, "이메일과 비밀번호를 모두 입력해주세요.");
       return;
     }
-    var url = Uri.parse('https://esaydroid.softj.net/api/login');
-    var response = await http.post(
-      url,
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: json.encode({
-        "email": emailController.text,
-        "password": passwordController.text
-      }),
-    );
-    // 응답 처리
-    if (response.statusCode == 200) {
-      // 로그인 성공: 다음 화면으로 네비게이션
-      SharedPreferences prefs = await SharedPreferences.getInstance();
-      await prefs.setBool('isLoggedIn', true);
-      await prefs.setString('userEmail', email);
-      // 메인 페이지로 네비게이션
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavigationHomeScreen()));
-    } else if (response.statusCode == 500) {
-      // 서버 에러: 에러 메시지 표시
-      var responseData = json.decode(response.body);
-      showCustomToast(context,inputKey, responseData['error']);
-    } else {
-      // 그 외의 에러: 기본 에러 메시지 표시
-      showCustomToast(context,inputKey, "로그인 실패");
+
+    try {
+      var url = Uri.parse('https://esaydroid.softj.net/api/login');
+      var response = await http.post(
+        url,
+        headers: {"Content-Type": "application/json"},
+        body: json.encode({"email": email, "password": password}),
+      );
+
+      // 응답 처리
+      if (response.statusCode == 200) {
+        // 로그인 성공: 다음 화면으로 네비게이션
+        SharedPreferences prefs = await SharedPreferences.getInstance();
+        await prefs.setBool('isLoggedIn', true);
+        await prefs.setString('userEmail', email);
+
+        // 메인 페이지로 네비게이션
+        Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => NavigationHomeScreen()));
+      } else if (response.statusCode == 500) {
+        // 서버 에러: 에러 메시지 표시
+        var responseData = json.decode(response.body);
+        showCustomToast(context, inputKey, responseData['error']);
+      } else {
+        // 그 외의 에러: 기본 에러 메시지 표시
+        showCustomToast(context, inputKey, "로그인 실패");
+      }
+    } catch (e) {
+      // 네트워크 오류 또는 기타 예외 처리
+      showCustomToast(context, inputKey, "로그인 중 오류가 발생했습니다: $e");
     }
-    // 로그인 성공 시, 다음 화면으로 네비게이션
-    // Navigator.push(context, MaterialPageRoute(builder: (context) => NextPage()));
   }
 }
