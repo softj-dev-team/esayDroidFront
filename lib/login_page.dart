@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:esaydroid/setting_screen.dart';
+import 'package:esaydroid/sign_up_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'helper/toast_helper.dart';
@@ -11,8 +12,8 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-final TextEditingController emailController = TextEditingController(text: "majorsafe4@gmail.com");
-final TextEditingController passwordController = TextEditingController(text: "k1o72jmp15");
+final TextEditingController emailController = TextEditingController();
+final TextEditingController passwordController = TextEditingController();
 class _LoginPageState extends State<LoginPage> {
   GlobalKey inputKey = GlobalKey();
 
@@ -33,16 +34,31 @@ class _LoginPageState extends State<LoginPage> {
             SizedBox(height: 10), // 첫 번째 열과 두 번째 열 사이 간격
             passwordInputSection(context),
             SizedBox(height: 20),
-            SizedBox(
-              width: 300.0, // 버튼의 가로 사이즈를 최대로 설정
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  primary: Colors.blue[900], // 버튼의 배경색을 진한 블루로 설정
-                  onPrimary: Colors.white, // 버튼의 텍스트 색상을 흰색으로 설정
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                SizedBox(
+                  // width: 300.0, // 버튼의 가로 사이즈를 최대로 설정
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      primary: Colors.blue[900], // 버튼의 배경색을 진한 블루로 설정
+                      onPrimary: Colors.white, // 버튼의 텍스트 색상을 흰색으로 설정
+                    ),
+                    onPressed: _login,
+                    child: Text('로그인'),
+                  ),
                 ),
-                onPressed: _login,
-                child: Text('로그인'),
-              ),
+                SizedBox(width: 20),
+                InkWell(
+                  onTap: () {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => SignUpPage(title: '회원가입',)));
+                  },
+                  child: Text(
+                    'Sing up',
+                    style: TextStyle(decoration: TextDecoration.none, color: Colors.blue.shade900),
+                  ),
+                ),
+              ],
             ),
           ],
         ),

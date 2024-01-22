@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:esaydroid/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -18,10 +19,10 @@ class SignUpPage extends StatefulWidget {
   final String title;
 
   @override
-  State<SignUpPage> createState() => _MyHomePageState();
+  State<SignUpPage> createState() => _SignUpPage();
 }
 
-class _MyHomePageState extends State<SignUpPage> {
+class _SignUpPage extends State<SignUpPage> {
   GlobalKey emailInputKey = GlobalKey();
   final TextEditingController emailController = TextEditingController();
   final TextEditingController authCodeController = TextEditingController();
@@ -43,6 +44,27 @@ class _MyHomePageState extends State<SignUpPage> {
             emailInputSection(context), // 이메일 입력란과 전송 버튼을 포함한 섹션
             SizedBox(height: 10), // 첫 번째 열과 두 번째 열 사이 간격
             authCodeInputSection(context), // 인증코드 입력란
+            SizedBox(height: 20), // 첫 번째 열과 두 번째 열 사이 간격
+            Row(
+              mainAxisSize: MainAxisSize.min,
+              children: <Widget>[
+                IconButton(
+                  icon: Icon(Icons.arrow_back),
+                  onPressed: () {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                  },
+                ),
+                InkWell(
+                  onTap: () {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (context) => LoginPage()));
+                  },
+                  child: Text(
+                    'Login',
+                    style: TextStyle(decoration: TextDecoration.none, color: Colors.blue.shade900),
+                  ),
+                ),
+              ],
+            ),
           ],
         ),
       ),
@@ -64,7 +86,7 @@ class _MyHomePageState extends State<SignUpPage> {
         controller: emailController,
         decoration: InputDecoration(
           labelText: '이메일',
-          border: OutlineInputBorder(),
+          // border: OutlineInputBorder(),
           suffixIcon: IconButton(
             icon: Icon(Icons.send, color: Colors.blue[800]), // 아이콘 색상을 진한 블루로 설정
             onPressed: () {
@@ -86,7 +108,7 @@ class _MyHomePageState extends State<SignUpPage> {
             controller: authCodeController,
             decoration: InputDecoration(
               labelText: '인증코드',
-              border: OutlineInputBorder(),
+              // border: OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(Icons.verified_user, color: Colors.blue[800]), // 아이콘 색상을 진한 블루로 설정
                 onPressed: () {

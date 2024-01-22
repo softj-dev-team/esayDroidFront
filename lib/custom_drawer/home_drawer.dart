@@ -41,7 +41,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
     drawerList = <DrawerList>[
       DrawerList(
         index: DrawerIndex.HOME,
-        labelName: '처음으로',
+        labelName: 'Home',
         icon: Icon(Icons.home),
       ),
       DrawerList(
@@ -111,23 +111,24 @@ class _HomeDrawerState extends State<HomeDrawer> {
                                       curve: Curves.fastOutSlowIn))
                                   .value /
                               360),
+
                           // child: Container(
-                          //   height: 120,
-                          //   width: 120,
-                          //   decoration: BoxDecoration(
-                          //     shape: BoxShape.circle,
-                          //     boxShadow: <BoxShadow>[
-                          //       BoxShadow(
-                          //           color: AppTheme.grey.withOpacity(0.6),
-                          //           offset: const Offset(2.0, 4.0),
-                          //           blurRadius: 8),
-                          //     ],
-                          //   ),
-                          //   child: ClipRRect(
-                          //     borderRadius:
-                          //         const BorderRadius.all(Radius.circular(60.0)),
-                          //     child: Image.asset('assets/images/userImage.png'),
-                          //   ),
+                            // height: 120,
+                            // // width: 120,
+                            // decoration: BoxDecoration(
+                            //   shape: BoxShape.circle,
+                            //   boxShadow: <BoxShadow>[
+                            //     BoxShadow(
+                            //         color: AppTheme.grey.withOpacity(0.6),
+                            //         offset: const Offset(2.0, 4.0),
+                            //         blurRadius: 8),
+                            //   ],
+                            // ),
+                            // child: ClipRRect(
+                            //   borderRadius:
+                            //       const BorderRadius.all(Radius.circular(60.0)),
+                            //   child: Image.asset('assets/images/userImage.png'),
+                            // ),
                           // ),
                         ),
                       );
@@ -144,7 +145,7 @@ class _HomeDrawerState extends State<HomeDrawer> {
                             style: TextStyle(
                               fontWeight: FontWeight.w600,
                               color: isLightMode ? AppTheme.grey : AppTheme.white,
-                              fontSize: 18,
+                              fontSize: 14,
                             ),
                           );
                         } else {
