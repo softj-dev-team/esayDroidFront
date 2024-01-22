@@ -8,6 +8,7 @@ import 'package:http/http.dart' as http;
 import 'package:intl/intl.dart';
 import 'dart:io';
 import 'package:file_picker/file_picker.dart';
+import 'helper/platform_utils.dart' if (dart.library.io) 'helper/platform_utils_io.dart';
 class SettingScreen extends StatefulWidget {
   @override
   _SettingScreenState createState() => _SettingScreenState();
@@ -69,7 +70,7 @@ class _SettingScreenState extends State<SettingScreen> {
               crossAxisAlignment: CrossAxisAlignment.center,
 
               children: <Widget>[
-                SizedBox(height: 150),
+                SizedBox(height: 80),
                 Row(
                   mainAxisSize: MainAxisSize.min, // Row의 크기를 자식의 크기에 맞춤
                   children: <Widget>[
@@ -96,11 +97,11 @@ class _SettingScreenState extends State<SettingScreen> {
                     ),
                   ],
                 ),
-                SizedBox(height: 20), // 로고와 입력란 사이 간격
+                SizedBox(height: 10), // 로고와 입력란 사이 간격
                 searchStringInputSection(context),
                 SizedBox(height: 10), // 첫 번째 열과 두 번째 열 사이 간격
                 targetTitleInputSection(context),
-                SizedBox(height: 70), // 첫 번
+                SizedBox(height: 20), // 첫 번
                 // 세로고침 아이콘 추가
                 Row(
                   mainAxisSize: MainAxisSize.min, // Row의 크기를 자식의 크기에 맞춤
@@ -114,40 +115,42 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                     ),
                     SizedBox(width: 40), // 텍스트와 아이콘 사이의 간격
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.folder),
-                      onPressed: _pickDirectory,
-                    ),
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.github),
-                      onPressed: () {
-                        runGitPulCommand();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.bug_report_outlined),
-                      onPressed: () {
-                        assembleDebug();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.bug_report),
-                      onPressed: () {
-                        assembleAndroidTest();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(Icons.play_arrow_sharp),
-                      onPressed: () {
-                        runCommand();
-                      },
-                    ),
-                    IconButton(
-                      icon: Icon(FontAwesomeIcons.stop),
-                      onPressed: () {
-                        stopCommand();
-                      },
-                    ),
+                    if (isPlatformWindows()) ...[
+                      IconButton(
+                        icon: Icon(FontAwesomeIcons.folder),
+                        onPressed: _pickDirectory,
+                      ),
+                      IconButton(
+                        icon: Icon(FontAwesomeIcons.github),
+                        onPressed: () {
+                          runGitPulCommand();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.bug_report_outlined),
+                        onPressed: () {
+                          assembleDebug();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.bug_report),
+                        onPressed: () {
+                          assembleAndroidTest();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(Icons.play_arrow_sharp),
+                        onPressed: () {
+                          runCommand();
+                        },
+                      ),
+                      IconButton(
+                        icon: Icon(FontAwesomeIcons.stop),
+                        onPressed: () {
+                          stopCommand();
+                        },
+                      ),
+                    ],
                     IconButton(
                       icon: Icon(Icons.refresh),
                       onPressed: () {
@@ -359,29 +362,47 @@ class _SettingScreenState extends State<SettingScreen> {
                         children: <Widget>[
                           Text("타겟영상제목: ${record['title']}", style: TextStyle(fontWeight: FontWeight.bold)),
                           Text("검색어: ${record['keyword']}"),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.end,
+                            children: <Widget>[
+                              Text(formattedDate, style: TextStyle(fontSize: 12)), // 등록일
+
+                              IconButton(
+                                icon: Icon(Icons.delete, color: Colors.red.shade600),
+                                onPressed: () {
+                                  deleteVideo(record['id'].toString());
+                                },
+                              ),
+                              IconButton(
+                                icon: Icon(isOn ? Icons.toggle_on : Icons.toggle_off, color: isOn ? Colors.blue[900] : Colors.grey, size: 40.0),
+                                onPressed: () {
+                                  callJsonUriWithId(record['id'].toString());
+                                },
+                              ),
+                            ],
+                          ),
                         ],
                       ),
                     ),
                     // 버튼 및 등록일
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: <Widget>[
-                        Text(formattedDate, style: TextStyle(fontSize: 12)), // 등록일
-                        IconButton(
-                          icon: Icon(Icons.delete, color: Colors.red.shade600),
-                          onPressed: () {
-                            deleteVideo(record['id'].toString());
-                          },
-                        ),
-                        IconButton(
-                          icon: Icon(isOn ? Icons.toggle_on : Icons.toggle_off, color: isOn ? Colors.blue[900] : Colors.grey, size: 40.0),
-                          onPressed: () {
-                            callJsonUriWithId(record['id'].toString());
-                          },
-                        ),
-
-                      ],
-                    ),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    //   children: <Widget>[
+                    //     Text(formattedDate, style: TextStyle(fontSize: 12)), // 등록일
+                    //     IconButton(
+                    //       icon: Icon(Icons.delete, color: Colors.red.shade600),
+                    //       onPressed: () {
+                    //         deleteVideo(record['id'].toString());
+                    //       },
+                    //     ),
+                    //     IconButton(
+                    //       icon: Icon(isOn ? Icons.toggle_on : Icons.toggle_off, color: isOn ? Colors.blue[900] : Colors.grey, size: 40.0),
+                    //       onPressed: () {
+                    //         callJsonUriWithId(record['id'].toString());
+                    //       },
+                    //     ),
+                    //   ],
+                    // ),
                   ],
                 ),
               ),
