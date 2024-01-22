@@ -39,8 +39,7 @@ dependencies:
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  http: ^0.13.3
-  fluttertoast: ^8.0.7
+
   # The "flutter_lints" package below contains a set of recommended lints to
   # encourage good coding practices. The lint set provided by the package is
   # activated in the `analysis_options.yaml` file located at the root of your
@@ -52,7 +51,14 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter packages.
-
+  shared_preferences: ^2.0.6
+  http: ^0.13.3
+  fluttertoast: ^8.0.7
+  animations: ^2.0.0
+  font_awesome_flutter: ^10.6.0
+  intl: ^0.17.0
+  flutter_rating_bar: ^4.0.0
+  file_picker: ^4.0.0
 flutter:
 
   # The following line ensures that the Material Icons font is
@@ -91,4 +97,8 @@ flutter:
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/custom-fonts/#from-packages
   assets:
-    - assets/images/logo.png
+    - assets/images/
+    - assets/introduction_animation/
+    - assets/hotel/
+    - assets/fitness_app/
+    - assets/design_course/
