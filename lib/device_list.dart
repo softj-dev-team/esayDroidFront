@@ -21,7 +21,6 @@ class MyApp extends StatelessWidget {
 
 class MyGridView extends StatefulWidget {
   final Function(List<String>) onSelectedDevicesChanged; // 콜백 함수 선언
-
   MyGridView({Key? key, required this.onSelectedDevicesChanged}) : super(key: key);
 
   @override
@@ -29,6 +28,69 @@ class MyGridView extends StatefulWidget {
 }
 
 class _MyGridViewState extends State<MyGridView> {
+
+  OverlayEntry? _overlayEntry;
+  final LayerLink _layerLink = LayerLink();
+
+  @override
+  void dispose() {
+    _overlayEntry?.remove();
+    super.dispose();
+  }
+
+  bool _isHoveringPopup = false;
+  void _showPopup(BuildContext context, Offset position, String deviceId) {
+    _overlayEntry?.remove();
+    _overlayEntry = _createOverlayEntry(context, position, deviceId);
+    Overlay.of(context)?.insert(_overlayEntry!);
+  }
+
+  void _hidePopup() {
+    if (!_isHoveringPopup) {
+      _overlayEntry?.remove();
+      _overlayEntry = null;
+    }
+  }
+
+  OverlayEntry _createOverlayEntry(BuildContext context, Offset position, String deviceId) {
+    final double itemHeight = 0; // 가정한 그리드 아이템의 높이
+
+    return OverlayEntry(
+      builder: (context) => Positioned(
+        left: position.dx,
+        top: position.dy + itemHeight, // 아이템 아래에 표시
+        // width: 200,
+        // height: 60,
+        child: MouseRegion(
+          onEnter: (_) => _isHoveringPopup = true,
+          onExit: (_) {
+            _isHoveringPopup = false;
+            _hidePopup();
+          },
+          child: Material(
+            elevation: 4.0,
+            child: Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0), // 여기에 padding을 추가합니다.
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: <Widget>[
+
+                  IconButton(
+                    icon: Icon(Icons.phone_android),
+                    onPressed: () {
+                      // 실행할 함수
+                      runScrcpy(deviceId);
+                    },
+                  ),
+                  Text(deviceId),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
   List<bool> isActive = [];
   List<String> devices = [];
   int startSwipeIndex = -1;
@@ -97,6 +159,14 @@ class _MyGridViewState extends State<MyGridView> {
       print('Error running scrcpy: ${result.stderr}');
     }
   }
+  // 디바이스 목록을 새로고침하는 함수
+  void refreshDeviceList() {
+    setState(() {
+      devices.clear(); // 기존 디바이스 목록을 지웁니다.
+      fetchDevices(); // 디바이스 목록을 다시 가져옵니다.
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -104,9 +174,19 @@ class _MyGridViewState extends State<MyGridView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ElevatedButton(
-              onPressed: toggleSelectAll,
-              child: isAllSelected?Icon(FontAwesomeIcons.checkDouble,color: Colors.red,) : Icon(FontAwesomeIcons.checkDouble), // 전체 선택/해제 아이콘 동적 변경
+            IconButton(
+              icon: Icon(
+                FontAwesomeIcons.checkDouble,
+                color: isAllSelected ? Colors.red : null, // 색상 변경
+                // size: 24.0, // 아이콘 크기 설정
+              ),
+              onPressed: toggleSelectAll,// 클릭 시 수행할 동작
+              tooltip: '전체선택', // 툴팁 메시지 추가
+            ),
+            IconButton(
+              icon: Icon(Icons.refresh), // 새로 고침 아이콘
+              onPressed: refreshDeviceList, // 클릭 시 refreshDeviceList 함수 호출
+              tooltip: '목록세로고침', // 툴팁 메시지 추가
             ),
           ],
         ),
@@ -156,31 +236,21 @@ class _MyGridViewState extends State<MyGridView> {
               ),
               itemCount: devices.length,
               itemBuilder: (context, index) {
-                return Tooltip(
-                  message: 'Device ID: ${devices[index]}', // 툴팁 메시지
-                  child:InkWell(
-                    onTap: () {
-                      setState(() {
-                        isActive[index] = !isActive[index];
-                        _logSelectedElements();
-                      });
-                      if (isActive[index]) {
-                        // Run scrcpy for the selected device
-                        runScrcpy(devices[index]);
-                      }
-                    },
-                    child: Container(
-                      alignment: Alignment.center,
-                      child: Text(
-                        devices.isNotEmpty ? '${index + 1}' : 'Device ${index + 1}',
-                        style: TextStyle(
-                          color: isActive[index] ? Colors.white : Colors.blue.shade900, // 조건부 색상 변경
-                        ),
+
+                return MouseRegion(
+                  onEnter: (event) => _showPopup(context, event.position, devices[index]),
+                  onExit: (event) => _hidePopup(),
+                  child: Container(
+                    alignment: Alignment.center,
+                    child: Text(
+                      '${index + 1}',
+                      style: TextStyle(
+                        color: isActive[index] ? Colors.white : Colors.grey, // 조건부 색상 변경
                       ),
-                      decoration: BoxDecoration(
-                        color: isActive[index] ? Colors.blue.shade900 : Colors.grey[200],
-                        border: Border.all(color: Colors.white),
-                      ),
+                    ),
+                    decoration: BoxDecoration(
+                      color: isActive[index] ? Colors.blue.shade900 : Colors.grey[200],
+                      border: Border.all(color: Colors.white),
                     ),
                   ),
                 );

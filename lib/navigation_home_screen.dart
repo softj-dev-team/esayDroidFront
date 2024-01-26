@@ -23,7 +23,7 @@ class _NavigationHomeScreenState extends State<NavigationHomeScreen> {
   double calculateDrawerWidth(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width;
     if (screenWidth >= 900) {
-      return screenWidth * 0.18; // 화면 너비의 18%
+      return screenWidth * 0.25; // 화면 너비의 18%
     } else if (screenWidth >= 600) {
       return screenWidth * 0.35; // 화면 너비의 35%
     } else {
