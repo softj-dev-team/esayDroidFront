@@ -1,9 +1,12 @@
 import 'package:esaydroid/best_flutter_ui_templates/app_theme.dart';
+import 'package:esaydroid/change_password_screen.dart';
 import 'package:esaydroid/setting_screen.dart';
 import 'package:esaydroid/custom_drawer/drawer_user_controller.dart';
 import 'package:esaydroid/custom_drawer/home_drawer.dart';
 import 'package:esaydroid/home_screen.dart';
 import 'package:flutter/material.dart';
+
+import 'admin_service_screen.dart';
 
 class NavigationHomeScreen extends StatefulWidget {
   @override
@@ -67,6 +70,16 @@ class _NavigationHomeScreenState extends State<NavigationHomeScreen> {
         case DrawerIndex.Setting:
           setState(() {
             screenView = SettingScreen();
+          });
+          break;
+        case DrawerIndex.ChangePassword:
+          setState(() {
+            screenView = ChangePasswordScreen();
+          });
+          break;
+        case DrawerIndex.AdminService:
+          setState(() {
+            screenView = AdminService();
           });
           break;
         // case DrawerIndex.Help:

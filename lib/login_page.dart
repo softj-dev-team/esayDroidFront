@@ -12,8 +12,8 @@ class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
 }
-final TextEditingController emailController = TextEditingController();
-final TextEditingController passwordController = TextEditingController();
+final TextEditingController emailController = TextEditingController(text: "dev@softj.net");
+final TextEditingController passwordController = TextEditingController(text: "!1qazsoftj");
 class _LoginPageState extends State<LoginPage> {
   GlobalKey inputKey = GlobalKey();
 

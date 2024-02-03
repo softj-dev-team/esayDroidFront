@@ -1,7 +1,7 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-
+import 'package:logger/logger.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -37,6 +37,14 @@ class _MyGridViewState extends State<MyGridView> {
     _overlayEntry?.remove();
     super.dispose();
   }
+
+  var logger = Logger(
+    printer: PrettyPrinter(),
+  );
+
+  var loggerNoStack = Logger(
+    printer: PrettyPrinter(methodCount: 0),
+  );
 
   bool _isHoveringPopup = false;
   void _showPopup(BuildContext context, Offset position, String deviceId) {
@@ -147,16 +155,19 @@ class _MyGridViewState extends State<MyGridView> {
   }
 // Method to run scrcpy with the selected device ID
   void runScrcpy(String deviceId) async {
-
-    var result = await Process.run('scrcpy', [
-      '-s', deviceId,
-      '-m', '740', // 최대 크기를 1024 픽셀로 제한
-      '--window-width', '360', // 창 폭을 800으로 설정
-      // '--window-height', '600', // 창 높이를 600으로 설정
-    ]);
+    var result = await Process.run(
+        'scrcpy',
+        [
+          '-s', deviceId,
+          // '-m', '740', // 최대 크기를 1024 픽셀로 제한
+          '--window-width', '280', // 창 폭을 800으로 설정
+          // '--window-height', '600', // 창 높이를 600으로 설정
+        ],
+        runInShell: true);
     // Handle the result of the command
+    logger.d('running scrcpy: ${result.stdout}');
     if (result.exitCode != 0) {
-      print('Error running scrcpy: ${result.stderr}');
+      logger.e('Error running scrcpy: ${result.stderr}');
     }
   }
   // 디바이스 목록을 새로고침하는 함수
@@ -185,7 +196,7 @@ class _MyGridViewState extends State<MyGridView> {
             ),
             IconButton(
               icon: Icon(Icons.refresh), // 새로 고침 아이콘
-              onPressed: refreshDeviceList, // 클릭 시 refreshDeviceList 함수 호출
+              onPressed: refreshDeviceList,
               tooltip: '목록세로고침', // 툴팁 메시지 추가
             ),
           ],

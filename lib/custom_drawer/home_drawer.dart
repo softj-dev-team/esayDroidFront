@@ -49,6 +49,16 @@ class _HomeDrawerState extends State<HomeDrawer> {
         labelName: '서비스관리',
         icon: Icon(FontAwesomeIcons.gear),
       ),
+      DrawerList(
+        index: DrawerIndex.ChangePassword,
+        labelName: '비밀번호변경',
+        icon: Icon(FontAwesomeIcons.key),
+      ),
+      // DrawerList(
+      //   index: DrawerIndex.AdminService,
+      //   labelName: 'EasyUI',
+      //   icon: Icon(FontAwesomeIcons.gear),
+      // ),
       // DrawerList(
       //   index: DrawerIndex.Help,
       //   labelName: 'Help',
@@ -329,7 +339,9 @@ class _HomeDrawerState extends State<HomeDrawer> {
 
 enum DrawerIndex {
   HOME,
-  Setting
+  Setting,
+  ChangePassword,
+  AdminService,
   // FeedBack,
   // Help,
   // Share,

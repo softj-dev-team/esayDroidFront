@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:ffi';
 import 'helper/toast_helper.dart';
 import 'package:esaydroid/best_flutter_ui_templates/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -11,33 +10,21 @@ import 'dart:io';
 import 'package:file_picker/file_picker.dart';
 import 'helper/platform_utils.dart' if (dart.library.io) 'helper/platform_utils_io.dart';
 import 'device_list.dart'; // device_list.dart에서 MyGridView를 가져옵니다.
-import 'package:uuid/uuid.dart';
-import 'dart:math';
-import 'models/Task.dart';
-import 'package:logger/logger.dart';
 
-class SettingScreen extends StatefulWidget {
+
+class AdminService extends StatefulWidget {
   @override
-  _SettingScreenState createState() => _SettingScreenState();
+  _AdminServiceScreenState createState() => _AdminServiceScreenState();
 }
 final TextEditingController searchStringController = TextEditingController();
 final TextEditingController targetTitleStringController = TextEditingController();
 
-class _SettingScreenState extends State<SettingScreen> {
-
-  var logger = Logger(
-    printer: PrettyPrinter(),
-  );
-
-  var loggerNoStack = Logger(
-    printer: PrettyPrinter(methodCount: 0),
-  );
+class _AdminServiceScreenState extends State<AdminService> {
 
   List<dynamic> records = [];
   String? _selectedDirectory;
 
   List<String> selectedDevices = []; // 선택된 장치 목록 저장
-
   //콜백
   void onDevicesSelected(List<String> devices) {
     setState(() {
@@ -51,7 +38,6 @@ class _SettingScreenState extends State<SettingScreen> {
     loadData();
     _loadDirectory();
   }
-
   GlobalKey inputKey = GlobalKey();
 
   Future<String> getUserEmail() async {
@@ -162,7 +148,6 @@ class _SettingScreenState extends State<SettingScreen> {
       }
     });
   }
-
   @override
   Widget build(BuildContext context) {
     var brightness = MediaQuery.of(context).platformBrightness;
@@ -174,21 +159,18 @@ class _SettingScreenState extends State<SettingScreen> {
         children: <Widget>[
           if (isPlatformWindows()) ...[
             Container(
-              width: screenWidth * 0.3, // 화면 너비의 30%
+              width: screenWidth*0.3, // 화면 너비의 30%
               child: Column(
                 children: <Widget>[
                   SizedBox(height: 80),
                   MyGridView(
                     onSelectedDevicesChanged: onDevicesSelected, // 콜백 함수 전달
-                  ),
-                  Expanded(child: runningTasksList()),
-                  // 실행 중인 작업 스케쥴 리스트를 표시하는 위젯// MyGridView 추가
+                  ), // MyGridView 추가
                 ],
               ),
             ),
           ],
-          Expanded(
-            // 나머지 공간을 차지하는 위젯
+          Expanded( // 나머지 공간을 차지하는 위젯
             child: Column(
               children: <Widget>[
                 SizedBox(height: 80),
@@ -244,20 +226,17 @@ class _SettingScreenState extends State<SettingScreen> {
                       tooltip: '리스트 세로고침',
                     ),
                     if (isPlatformWindows()) ...[
+
                       IconButton(
                         icon: Icon(FontAwesomeIcons.shuffle),
-                        color: useRandomPlay == "Y"
-                            ? Colors.red.shade600
-                            : Colors.grey, // 색상 변경
+                        color: useRandomPlay == "Y" ? Colors.red.shade600 : Colors.grey, // 색상 변경
                         onPressed: toggleuseRandomPlayButton,
                         tooltip: '동영상 램덤 플레이', // 툴팁 메시지 추가
                       ),
                       IconButton(
                         icon: Icon(FontAwesomeIcons.listCheck),
-                        color: useFilter == "Y"
-                            ? Colors.red.shade600
-                            : Colors.grey, // 색상 변경
-                        onPressed: toggleuseFilterPlayButton,
+                        color: useFilter == "Y" ? Colors.red.shade600 : Colors.grey, // 색상 변경
+                        onPressed:toggleuseFilterPlayButton,
                         tooltip: '검색 필터 사용',
                       ),
                       IconButton(
@@ -289,11 +268,11 @@ class _SettingScreenState extends State<SettingScreen> {
               ],
             ),
           ),
+
         ],
       ),
     );
   }
-
   Widget titleList(BuildContext context) {
     double screenWidth = MediaQuery.of(context).size.width; // 화면의 전체 너비
     return Expanded(
@@ -350,64 +329,6 @@ class _SettingScreenState extends State<SettingScreen> {
       ),
     );
   }
-
-  Future<void> stopTask(List<dynamic> devicesDynamic,String taskId) async {
-    // 작업 정지 전 해당 taskId의 isLoading을 true로 설정
-    var taskIndex = runningTasks.indexWhere((task) => task.id == taskId);
-    if (taskIndex != -1) {
-      setState(() {
-        runningTasks[taskIndex].isLoading = true;
-      });
-    }
-    String deviceListString = devicesDynamic.join(',');
-    var result = await Process.run(
-        'cmd',
-        ['/c', 'gradlew', 'stopAppOnSpecifiedDevices', '-PdeviceList=$deviceListString'],
-        // ['/c', 'gradlew', 'runParallelTestsForInstall', '-PdeviceList=$deviceListString'],
-        workingDirectory: _selectedDirectory
-    );
-    if (result.exitCode == 0) {
-      showCustomToast(context, inputKey, "성공: ${result.stdout}");
-      setState(() {
-        runningTasks.removeWhere((task) => task.id == taskId);
-      });
-
-    }else{
-      showCustomToast(context, inputKey, "실패: ${result.stderr}");
-    }
-  }
-  // 새로운 리스트 카드 위젯을 추가하는 부분
-  Widget runningTasksList() {
-    // 좌우 패딩 값 설정
-    double horizontalPadding = 16.0;
-
-    return Padding(
-        padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
-        child: ListView.builder(
-          itemCount: runningTasks.length,
-          itemBuilder: (context, index) {
-            var task = runningTasks[index];
-            return Card(
-              child: ListTile(
-                title: Text("${task.keyword}"),
-                subtitle: Text("${task.getFormattedDate()}"),
-                trailing: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    task.isLoading
-                        ? CircularProgressIndicator() // 로딩 인디케이터
-                        : IconButton(
-                      icon: Icon(Icons.stop),
-                      onPressed: () => stopTask(task.devices.cast<String>(), task.id),
-                    ),
-                  ],
-                ),
-              ),
-            );
-          },
-        ));
-  }
-
   Future<void> deleteVideo(String id) async {
     try {
       var url = Uri.parse('https://esaydroid.softj.net/api/delete-video/$id');
@@ -452,47 +373,7 @@ class _SettingScreenState extends State<SettingScreen> {
     }
   }
 
-  // List<Map<String, dynamic>> runningTasks = []; // 실행 중인 작업 스케쥴 리스트
-  List<Task> runningTasks = [];
-  // 작업 ID를 저장할 리스트를 정의합니다.
-  List<String> createdTaskIds = [];
-  Future<void> initTasks() async {
-    List<dynamic> allRecords = await getAllRecords(await getUserEmail());
-    var activeRecords = allRecords.where((record) => record['use_status_cd'] == 1).toList();
-    // 초기화 전에 이전 작업 ID들을 비웁니다.
-    createdTaskIds.clear();
-    for (var record in activeRecords) {
-      createdTaskIds.add(
-        await addTask(
-          record["keyword"],
-          record["title"],
-          List.from(selectedDevices),
-          true, // 비동기 작업 실행 중임을 나타냄
-        )
-      );
-    }
-  }
-  Future<String> addTask(String keyword, String title, List<String> devices, isLoading) async {
-    var newTask = Task(
-      id: Uuid().v4(),
-      keyword: keyword,
-      title: title,
-      devices: devices,
-      isLoading : isLoading,
-    );
 
-    // 새로운 작업을 리스트에 추가
-    runningTasks.add(newTask);
-
-    // 생성 시간 기준으로 오름차순 정렬
-    runningTasks.sort((a, b) => b.createdAt.compareTo(a.createdAt));
-
-    // 상태 업데이트
-    setState(() {
-
-    });
-    return newTask.id; // 생성된 작업의 ID를 반환
-  }
   Future<void> runCommand() async {
     if (_selectedDirectory == null) {
       showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
@@ -502,51 +383,31 @@ class _SettingScreenState extends State<SettingScreen> {
       showCustomToast(context, inputKey, "장치를 먼저 선택해주세요.");
       return;
     }
-    logger.d('test');
+
     // 선택된 장치 목록을 콤마로 구분된 문자열로 변환
     String deviceListString = selectedDevices.join(',');
-
     try {
-      await initTasks(); // 모든 레코드 로딩 및 작업 생성
-      var resultTest = await Process.run(
-          'cmd',
-          ['/c', 'echo', 'ok'],
-          workingDirectory: _selectedDirectory,
-          runInShell: true
-      );
-      logger.d(resultTest.stdout);
+      //실행전 서버의 작업 스케쥴을 등록한다.
+      saveRunTask();
+
       var result = await Process.run(
           'cmd',
           ['/c', 'gradlew', 'runParallelTestsForInstallGetDevices', '-PdeviceList=$deviceListString'],
           // ['/c', 'gradlew', 'runParallelTestsForInstall', '-PdeviceList=$deviceListString'],
-          workingDirectory: _selectedDirectory,
-          // runInShell: true
+          workingDirectory: _selectedDirectory
       );
-
-      logger.d(result.stdout);
       if (result.exitCode == 0) {
-        // 성공: isLoading을 false로 설정하여 UI 업데이트, createdTaskIds에 있는 task만 업데이트
-        for (var taskId in createdTaskIds) {
-          var taskIndex = runningTasks.indexWhere((task) => task.id == taskId);
-          if (taskIndex != -1) {
-            runningTasks[taskIndex].isLoading = false;
-          }
-        }
-        showCustomToast(context, inputKey, "성공: ${result.stdout}");
-        await saveRunTask(); // 스케쥴 등록
-        setState(() {});
+        // 명령어 실행이 성공한 경우
+        showCustomToast(context, inputKey,"성공: ${result.stdout}");
       } else {
         // 명령어 실행에 실패한 경우
         showCustomToast(context, inputKey, "실패: ${result.stderr}");
-        logger.d("실패: ${result.stderr}");
-        runningTasks.removeWhere((task) => createdTaskIds.contains(task.id));
       }
     } catch (e) {
-      logger.d('오류: $e');
+
       showCustomToast(context, inputKey, '오류: $e');
     }
   }
-
   Future<void> stopCommand() async {
     if (_selectedDirectory == null) {
       showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
@@ -560,9 +421,6 @@ class _SettingScreenState extends State<SettingScreen> {
           workingDirectory: _selectedDirectory
       );
       if (result.exitCode == 0) {
-        setState(() {
-          runningTasks.clear(); // 모든 작업을 리스트에서 삭제
-        });
         // 명령어 실행이 성공한 경우
         showCustomToast(context, inputKey,"성공: ${result.stdout}");
       } else {
@@ -627,7 +485,6 @@ class _SettingScreenState extends State<SettingScreen> {
       var url = Uri.parse('https://esaydroid.softj.net/api/create-run-task');
       var response = await http.post(
         url,
-
         headers: {"Content-Type": "application/json"},
         body: json.encode({
           "email": await getUserEmail(),
@@ -637,8 +494,7 @@ class _SettingScreenState extends State<SettingScreen> {
       );
 
       if (response.statusCode == 200) {
-        var data = json.decode(response.body);
-        showCustomToast(context, inputKey, "${data}");
+        showCustomToast(context, inputKey, "작업 등록 성공");
         // 데이터 저장 후 목록 갱신
       } else {
         showCustomToast(context, inputKey, "저장 실패: ${json.decode(response.body)['error']}");
@@ -765,7 +621,6 @@ class _SettingScreenState extends State<SettingScreen> {
       throw Exception("네트워크 오류: $e");
     }
   }
-
   Future<void> loadData() async {
     try {
       var fetchedRecords = await getAllRecords(await getUserEmail());

@@ -61,6 +61,9 @@ dev_dependencies:
   file_picker: ^4.0.0
   web_socket_channel: ^2.4.0
   video_player : ^2.8.0
+  uuid: ^4.3.3
+  logger: 2.0.2
+
 flutter:
 
   # The following line ensures that the Material Icons font is
