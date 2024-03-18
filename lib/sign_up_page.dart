@@ -129,7 +129,7 @@ class _SignUpPage extends State<SignUpPage> {
       return;
     }
 
-    var url = Uri.parse('https://esaydroid.softj.net/api/user-register');
+    var url = Uri.parse('FlutterConfig.get('api_host');/api/user-register');
     var response = await http.post(
       url,
       headers: {
@@ -158,7 +158,7 @@ class _SignUpPage extends State<SignUpPage> {
       }
 
       String email = emailController.text; // 입력된 이메일 가져오기
-      var url = Uri.parse('https://esaydroid.softj.net/api/send-verification-email');
+      var url = Uri.parse('FlutterConfig.get('api_host');/api/send-verification-email');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

@@ -1,7 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:logger/logger.dart';
+import 'package:web_socket_channel/io.dart';
+import 'models/AdbShellCommand.dart';
 void main() => runApp(MyApp());
 
 class MyApp extends StatelessWidget {
@@ -13,6 +16,7 @@ class MyApp extends StatelessWidget {
           onSelectedDevicesChanged: (List<String> devices) {
             // Do nothing or handle the selected devices
           },
+          // selectedDirectory: ,
         ),
       ),
     );
@@ -21,13 +25,19 @@ class MyApp extends StatelessWidget {
 
 class MyGridView extends StatefulWidget {
   final Function(List<String>) onSelectedDevicesChanged; // 콜백 함수 선언
-  MyGridView({Key? key, required this.onSelectedDevicesChanged}) : super(key: key);
-
+  final String? selectedDirectory; // 선택된 디렉토리
+  MyGridView({Key? key,
+    required this.onSelectedDevicesChanged,
+    this.selectedDirectory,
+  }): super(key: key);
+  // MyGridView({Key? key, required this.workingDirectory}) : super(key: key);
   @override
   _MyGridViewState createState() => _MyGridViewState();
 }
 
 class _MyGridViewState extends State<MyGridView> {
+  // Creating an instance of AdbShellCommand
+  AdbShellCommand adbShellCommand = AdbShellCommand();
 
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
@@ -35,6 +45,7 @@ class _MyGridViewState extends State<MyGridView> {
   @override
   void dispose() {
     _overlayEntry?.remove();
+    channel.sink.close(); // 웹소켓 연결 종료
     super.dispose();
   }
 
@@ -61,7 +72,7 @@ class _MyGridViewState extends State<MyGridView> {
   }
 
   OverlayEntry _createOverlayEntry(BuildContext context, Offset position, String deviceId) {
-    final double itemHeight = 0; // 가정한 그리드 아이템의 높이
+    final double itemHeight = 20; // 가정한 그리드 아이템의 높이
 
     return OverlayEntry(
       builder: (context) => Positioned(
@@ -100,30 +111,65 @@ class _MyGridViewState extends State<MyGridView> {
     );
   }
   List<bool> isActive = [];
-  List<String> devices = [];
+  // List<String> devices = [];
+  List<Map<String, dynamic>> devices = [];
   int startSwipeIndex = -1;
   int currentSwipeIndex = -1;
+  late IOWebSocketChannel channel;
 
   @override
   void initState() {
     super.initState();
-    fetchDevices();
+    fetchDevicesWithAdb();
   }
+  void fetchDevicesWithWebSocket() {
+    channel = IOWebSocketChannel.connect('ws://180.229.59.144:22221');
+    channel.stream.listen((message) {
+      final jsonResponse = jsonDecode(message);
+      if (jsonResponse['StatusCode'] == 200) {
+        List<dynamic>  resultData = jsonDecode(jsonResponse['result']);
 
-  void fetchDevices() async {
+        // `no`를 기준으로 오름차순 정렬합니다.
+        resultData.sort((a, b) => a['no'].compareTo(b['no']));
+        setState(() {
+          devices = List<Map<String, dynamic>>.from(resultData);
+          isActive = List.generate(devices.length, (index) => false);
+        });
+      }
+    });
+    channel.sink.add(jsonEncode({"action": "List"}));
+  }
+  void fetchDevicesWithAdb() async {
     var result = await Process.run('adb', ['devices']);
     if (result.exitCode == 0) {
       List<String> lines = result.stdout.toString().split('\n');
-      for (var line in lines) {
-        if (line.contains('device') && !line.contains('List of devices')) {
-          devices.add(line.split('\t')[0]);
-        }
-      }
       setState(() {
-        isActive = List.generate(devices.length, (index) => false);
+        devices.clear();
+        isActive.clear();
+        int no = 1; // 임의의 번호 부여를 위한 변수
+        for (var line in lines) {
+          if (line.contains('device') && !line.contains('List of devices attached')) {
+            devices.add({"deviceId": line.split('\t')[0], "no": no++});
+            isActive.add(false);
+          }
+        }
       });
     }
   }
+  // void fetchDevices() async {
+  //   var result = await Process.run('adb', ['devices']);
+  //   if (result.exitCode == 0) {
+  //     List<String> lines = result.stdout.toString().split('\n');
+  //     for (var line in lines) {
+  //       if (line.contains('device') && !line.contains('List of devices')) {
+  //         devices.add(line.split('\t')[0]);
+  //       }
+  //     }
+  //     setState(() {
+  //       isActive = List.generate(devices.length, (index) => false);
+  //     });
+  //   }
+  // }
   bool isAllSelected = false; // 전체 선택 상태 추적
 
   void toggleSelectAll() {
@@ -174,7 +220,7 @@ class _MyGridViewState extends State<MyGridView> {
   void refreshDeviceList() {
     setState(() {
       devices.clear(); // 기존 디바이스 목록을 지웁니다.
-      fetchDevices(); // 디바이스 목록을 다시 가져옵니다.
+      fetchDevicesWithAdb();
     });
   }
 
@@ -186,8 +232,26 @@ class _MyGridViewState extends State<MyGridView> {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             IconButton(
+              icon: Icon(Icons.cast_connected), // 아이콘 설정
+              onPressed: () {
+                fetchDevicesWithWebSocket();
+                // adbShellCommand.runAdbShellMultiDevices(selectedDevices, widget.selectedDirectory,context);
+                // 버튼 클릭 시 실행할 동작
+              },
+              tooltip: '홈으로', // 툴팁 메시지 추가
+            ),
+            IconButton(
+              icon: Icon(Icons.home), // 아이콘 설정
+              onPressed: () {
+                // fetchDevicesWithWebSocket();
+                adbShellCommand.runAdbShellMultiDevices(devices, widget.selectedDirectory,context);
+                // 버튼 클릭 시 실행할 동작
+              },
+              tooltip: '홈으로', // 툴팁 메시지 추가
+            ),
+            IconButton(
               icon: Icon(
-                FontAwesomeIcons.checkDouble,
+                FontAwesomeIcons.checkToSlot,
                 color: isAllSelected ? Colors.red : null, // 색상 변경
                 // size: 24.0, // 아이콘 크기 설정
               ),
@@ -247,25 +311,52 @@ class _MyGridViewState extends State<MyGridView> {
               ),
               itemCount: devices.length,
               itemBuilder: (context, index) {
-
-                return MouseRegion(
-                  onEnter: (event) => _showPopup(context, event.position, devices[index]),
-                  onExit: (event) => _hidePopup(),
-                  child: Container(
-                    alignment: Alignment.center,
-                    child: Text(
-                      '${index + 1}',
-                      style: TextStyle(
-                        color: isActive[index] ? Colors.white : Colors.grey, // 조건부 색상 변경
+                var device = devices[index];
+                return GestureDetector( // GestureDetector 추가
+                  onDoubleTap: () {
+                    runScrcpy(device['deviceId']);
+                  },
+                  onTap: () {
+                    isActive[index] = !isActive[index];
+                    _logSelectedElements();
+                  },
+                  child: MouseRegion(
+                    child: Container(
+                      alignment: Alignment.center,
+                      child: Text(
+                        '${device['no']}', // 'no' 값을 사용하여 디바이스 번호 표시
+                        style: TextStyle(
+                          color: isActive[index] ? Colors.white : Colors.grey, // 조건부 색상 변경
+                        ),
                       ),
-                    ),
-                    decoration: BoxDecoration(
-                      color: isActive[index] ? Colors.blue.shade900 : Colors.grey[200],
-                      border: Border.all(color: Colors.white),
+                      decoration: BoxDecoration(
+                        color: isActive[index] ? Colors.blue.shade900 : Colors.grey[200],
+                        border: Border.all(color: Colors.white),
+                      ),
                     ),
                   ),
                 );
               },
+              // itemBuilder: (context, index) {
+              //
+              //   return MouseRegion(
+              //     onEnter: (event) => _showPopup(context, event.position, devices[index]),
+              //     onExit: (event) => _hidePopup(),
+              //     child: Container(
+              //       alignment: Alignment.center,
+              //       child: Text(
+              //         '${index + 1}',
+              //         style: TextStyle(
+              //           color: isActive[index] ? Colors.white : Colors.grey, // 조건부 색상 변경
+              //         ),
+              //       ),
+              //       decoration: BoxDecoration(
+              //         color: isActive[index] ? Colors.blue.shade900 : Colors.grey[200],
+              //         border: Border.all(color: Colors.white),
+              //       ),
+              //     ),
+              //   );
+              // },
             ),
           ),
         ),
@@ -286,14 +377,16 @@ class _MyGridViewState extends State<MyGridView> {
     return index;
   }
 
+  // 선택된 디바이스의 deviceId만을 추출하여 부모 위젯에 전달
   void _logSelectedElements() {
-    List<String> selectedDevices = [];
+    List<String> selectedDeviceIds = [];
     for (int i = 0; i < isActive.length; i++) {
       if (isActive[i]) {
-        selectedDevices.add(devices.isNotEmpty ? devices[i] : 'Device ${i + 1}');
+        selectedDeviceIds.add(devices[i]['deviceId']);
       }
     }
-    print('Selected devices: $selectedDevices');
-    widget.onSelectedDevicesChanged(selectedDevices);
+    print('Selected devices: $selectedDeviceIds');
+    widget.onSelectedDevicesChanged(selectedDeviceIds);
   }
+
 }

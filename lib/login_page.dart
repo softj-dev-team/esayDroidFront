@@ -113,7 +113,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      var url = Uri.parse('https://esaydroid.softj.net/api/login');
+      var url = Uri.parse('FlutterConfig.get('api_host');/api/login');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

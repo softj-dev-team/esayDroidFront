@@ -14,7 +14,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
 
   Future<void> changePassword() async {
-    var url = Uri.parse('https://esaydroid.softj.net/api/change-password');
+    var url = Uri.parse('FlutterConfig.get('api_host');/api/change-password');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},
