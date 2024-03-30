@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'dart:convert';
 
+import 'global_config.dart';
+
 class ChangePasswordScreen extends StatefulWidget {
   @override
   _ChangePasswordScreenState createState() => _ChangePasswordScreenState();
@@ -14,7 +16,7 @@ class _ChangePasswordScreenState extends State<ChangePasswordScreen> {
   final TextEditingController _newPasswordController = TextEditingController();
 
   Future<void> changePassword() async {
-    var url = Uri.parse('FlutterConfig.get('api_host');/api/change-password');
+    var url = Uri.parse('${GlobalConfig.apiHost}/api/change-password');
     var response = await http.post(
       url,
       headers: {"Content-Type": "application/json"},

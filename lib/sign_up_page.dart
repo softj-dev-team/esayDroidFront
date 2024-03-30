@@ -3,6 +3,7 @@ import 'package:esaydroid/login_page.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'global_config.dart';
 import 'helper/toast_helper.dart'; // LoginPage를 import합니다.
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key, required this.title});
@@ -129,7 +130,7 @@ class _SignUpPage extends State<SignUpPage> {
       return;
     }
 
-    var url = Uri.parse('FlutterConfig.get('api_host');/api/user-register');
+    var url = Uri.parse('${GlobalConfig.apiHost}/api/user-register');
     var response = await http.post(
       url,
       headers: {
@@ -158,7 +159,7 @@ class _SignUpPage extends State<SignUpPage> {
       }
 
       String email = emailController.text; // 입력된 이메일 가져오기
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/send-verification-email');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/send-verification-email');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},

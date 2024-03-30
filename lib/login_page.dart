@@ -6,15 +6,19 @@ import 'package:flutter/material.dart';
 import 'helper/toast_helper.dart';
 import 'package:http/http.dart' as http;
 import 'package:esaydroid/best_flutter_ui_templates/app_theme.dart';
-import 'main.dart';
+import 'package:logger/logger.dart';
 import 'navigation_home_screen.dart';
+import 'global_config.dart';
 class LoginPage extends StatefulWidget {
   @override
   _LoginPageState createState() => _LoginPageState();
+
 }
 final TextEditingController emailController = TextEditingController(text: "dev@softj.net");
 final TextEditingController passwordController = TextEditingController(text: "!1qazsoftj");
 class _LoginPageState extends State<LoginPage> {
+  var logger = Logger(printer: PrettyPrinter());
+  var loggerNoStack = Logger(printer: PrettyPrinter(methodCount: 0));
   GlobalKey inputKey = GlobalKey();
 
   @override
@@ -113,7 +117,7 @@ class _LoginPageState extends State<LoginPage> {
     }
 
     try {
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/login');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/login');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -139,7 +143,9 @@ class _LoginPageState extends State<LoginPage> {
       }
     } catch (e) {
       // 네트워크 오류 또는 기타 예외 처리
+      logger.e('Error running scrcpy: $e');
       showCustomToast(context, inputKey, "로그인 중 오류가 발생했습니다: $e");
+
     }
   }
 }

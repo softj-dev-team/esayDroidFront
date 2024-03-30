@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:logger/logger.dart';
 import 'package:web_socket_channel/io.dart';
+import 'global_config.dart';
 import 'models/AdbShellCommand.dart';
 void main() => runApp(MyApp());
 
@@ -41,23 +42,26 @@ class _MyGridViewState extends State<MyGridView> {
 
   OverlayEntry? _overlayEntry;
   final LayerLink _layerLink = LayerLink();
+  IOWebSocketChannel? channel;
+  var logger = Logger(printer: PrettyPrinter());
+  var loggerNoStack = Logger(printer: PrettyPrinter(methodCount: 0));
+  bool _isHoveringPopup = false;
+  List<bool> isActive = [];
+  List<Map<String, dynamic>> devices = [];
+  int startSwipeIndex = -1;
+  int currentSwipeIndex = -1;
 
   @override
   void dispose() {
     _overlayEntry?.remove();
-    channel.sink.close(); // 웹소켓 연결 종료
+    channel?.sink.close(); // 웹소켓 연결 종료
     super.dispose();
   }
-
-  var logger = Logger(
-    printer: PrettyPrinter(),
-  );
-
-  var loggerNoStack = Logger(
-    printer: PrettyPrinter(methodCount: 0),
-  );
-
-  bool _isHoveringPopup = false;
+  @override
+  void initState() {
+    super.initState();
+    fetchDevicesWithAdb();
+  }
   void _showPopup(BuildContext context, Offset position, String deviceId) {
     _overlayEntry?.remove();
     _overlayEntry = _createOverlayEntry(context, position, deviceId);
@@ -70,6 +74,54 @@ class _MyGridViewState extends State<MyGridView> {
       _overlayEntry = null;
     }
   }
+  void fetchDevicesWithWebSocket() {
+    channel = IOWebSocketChannel.connect('${GlobalConfig.wsHost}');
+    channel?.stream.listen((message) {
+      final jsonResponse = jsonDecode(message);
+      if (jsonResponse['StatusCode'] == 200) {
+        List<dynamic>  resultData = jsonDecode(jsonResponse['result']);
+
+        // `no`를 기준으로 오름차순 정렬합니다.
+        resultData.sort((a, b) => a['no'].compareTo(b['no']));
+        setState(() {
+          devices = List<Map<String, dynamic>>.from(resultData);
+          isActive = List.generate(devices.length, (index) => false);
+        });
+      }
+    });
+    channel?.sink.add(jsonEncode({"action": "List"}));
+  }
+  void fetchDevicesWithAdb() async {
+    var result = await Process.run('adb', ['devices']);
+    if (result.exitCode == 0) {
+      List<String> lines = result.stdout.toString().split('\n');
+      setState(() {
+        devices.clear();
+        isActive.clear();
+        int no = 1; // 임의의 번호 부여를 위한 변수
+        for (var line in lines) {
+          if (line.contains('device') && !line.contains('List of devices attached')) {
+            devices.add({"deviceId": line.split('\t')[0], "no": no++});
+            isActive.add(false);
+          }
+        }
+      });
+    }
+  }
+  // void fetchDevices() async {
+  //   var result = await Process.run('adb', ['devices']);
+  //   if (result.exitCode == 0) {
+  //     List<String> lines = result.stdout.toString().split('\n');
+  //     for (var line in lines) {
+  //       if (line.contains('device') && !line.contains('List of devices')) {
+  //         devices.add(line.split('\t')[0]);
+  //       }
+  //     }
+  //     setState(() {
+  //       isActive = List.generate(devices.length, (index) => false);
+  //     });
+  //   }
+  // }
 
   OverlayEntry _createOverlayEntry(BuildContext context, Offset position, String deviceId) {
     final double itemHeight = 20; // 가정한 그리드 아이템의 높이
@@ -110,66 +162,7 @@ class _MyGridViewState extends State<MyGridView> {
       ),
     );
   }
-  List<bool> isActive = [];
-  // List<String> devices = [];
-  List<Map<String, dynamic>> devices = [];
-  int startSwipeIndex = -1;
-  int currentSwipeIndex = -1;
-  late IOWebSocketChannel channel;
 
-  @override
-  void initState() {
-    super.initState();
-    fetchDevicesWithAdb();
-  }
-  void fetchDevicesWithWebSocket() {
-    channel = IOWebSocketChannel.connect('ws://180.229.59.144:22221');
-    channel.stream.listen((message) {
-      final jsonResponse = jsonDecode(message);
-      if (jsonResponse['StatusCode'] == 200) {
-        List<dynamic>  resultData = jsonDecode(jsonResponse['result']);
-
-        // `no`를 기준으로 오름차순 정렬합니다.
-        resultData.sort((a, b) => a['no'].compareTo(b['no']));
-        setState(() {
-          devices = List<Map<String, dynamic>>.from(resultData);
-          isActive = List.generate(devices.length, (index) => false);
-        });
-      }
-    });
-    channel.sink.add(jsonEncode({"action": "List"}));
-  }
-  void fetchDevicesWithAdb() async {
-    var result = await Process.run('adb', ['devices']);
-    if (result.exitCode == 0) {
-      List<String> lines = result.stdout.toString().split('\n');
-      setState(() {
-        devices.clear();
-        isActive.clear();
-        int no = 1; // 임의의 번호 부여를 위한 변수
-        for (var line in lines) {
-          if (line.contains('device') && !line.contains('List of devices attached')) {
-            devices.add({"deviceId": line.split('\t')[0], "no": no++});
-            isActive.add(false);
-          }
-        }
-      });
-    }
-  }
-  // void fetchDevices() async {
-  //   var result = await Process.run('adb', ['devices']);
-  //   if (result.exitCode == 0) {
-  //     List<String> lines = result.stdout.toString().split('\n');
-  //     for (var line in lines) {
-  //       if (line.contains('device') && !line.contains('List of devices')) {
-  //         devices.add(line.split('\t')[0]);
-  //       }
-  //     }
-  //     setState(() {
-  //       isActive = List.generate(devices.length, (index) => false);
-  //     });
-  //   }
-  // }
   bool isAllSelected = false; // 전체 선택 상태 추적
 
   void toggleSelectAll() {
@@ -238,7 +231,7 @@ class _MyGridViewState extends State<MyGridView> {
                 // adbShellCommand.runAdbShellMultiDevices(selectedDevices, widget.selectedDirectory,context);
                 // 버튼 클릭 시 실행할 동작
               },
-              tooltip: '홈으로', // 툴팁 메시지 추가
+              tooltip: '라이시순번', // 툴팁 메시지 추가
             ),
             IconButton(
               icon: Icon(Icons.home), // 아이콘 설정

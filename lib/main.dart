@@ -1,9 +1,11 @@
 import 'dart:io';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter/material.dart';
 import 'best_flutter_ui_templates/app_theme.dart';
+import 'global_config.dart';
 import 'navigation_home_screen.dart';
 import 'login_page.dart'; // LoginPage를 import합니다.
 
@@ -11,7 +13,8 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   SharedPreferences prefs = await SharedPreferences.getInstance();
   bool isLoggedIn = prefs.getBool('isLoggedIn') ?? false;
-
+  await dotenv.load(fileName: ".env");    // 2번코드
+  GlobalConfig.initialize(); // GlobalConfig 초기화
   runApp(MyApp(isLoggedIn: isLoggedIn));
 }
 

@@ -1,4 +1,6 @@
 import 'dart:convert';
+
+import 'global_config.dart';
 import 'helper/toast_helper.dart';
 import 'package:esaydroid/best_flutter_ui_templates/app_theme.dart';
 import 'package:flutter/material.dart';
@@ -331,7 +333,7 @@ class _AdminServiceScreenState extends State<AdminService> {
   }
   Future<void> deleteVideo(String id) async {
     try {
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/delete-video/$id');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/delete-video/$id');
       var response = await http.delete(
         url,
         headers: {"Content-Type": "application/json"},
@@ -482,7 +484,7 @@ class _AdminServiceScreenState extends State<AdminService> {
   }
   Future<void> saveRunTask() async {
     try {
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/create-run-task');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/create-run-task');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -504,7 +506,7 @@ class _AdminServiceScreenState extends State<AdminService> {
     }
   }
   Future<http.Response> callJsonUriWithId(String id) async {
-    var url = Uri.parse('FlutterConfig.get('api_host');/api/use-status-change'); // 실제 URL로 변경
+    var url = Uri.parse('${GlobalConfig.apiHost}/api/use-status-change'); // 실제 URL로 변경
     var body = json.encode({'id': id});
 
     try {
@@ -575,7 +577,7 @@ class _AdminServiceScreenState extends State<AdminService> {
   }
   Future<void> saveTitle(String userEmail, String targetTitle, String searchString) async {
     try {
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/save-title');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/save-title');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
@@ -599,7 +601,7 @@ class _AdminServiceScreenState extends State<AdminService> {
   }
   Future<List<dynamic>> getAllRecords(String userEmail) async {
     try {
-      var url = Uri.parse('FlutterConfig.get('api_host');/api/get-all-records');
+      var url = Uri.parse('${GlobalConfig.apiHost}/api/get-all-records');
       var response = await http.post(
         url,
         headers: {"Content-Type": "application/json"},
