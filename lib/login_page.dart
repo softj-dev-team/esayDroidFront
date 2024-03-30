@@ -45,8 +45,8 @@ class _LoginPageState extends State<LoginPage> {
                   // width: 300.0, // 버튼의 가로 사이즈를 최대로 설정
                   child: ElevatedButton(
                     style: ElevatedButton.styleFrom(
-                      primary: Colors.blue[900], // 버튼의 배경색을 진한 블루로 설정
-                      onPrimary: Colors.white, // 버튼의 텍스트 색상을 흰색으로 설정
+                      backgroundColor: Colors.blue[900], // 버튼의 배경색을 진한 블루로 설정
+                      foregroundColor: Colors.white, // 버튼의 텍스트 색상을 흰색으로 설정
                     ),
                     onPressed: _login,
                     child: Text('로그인'),
