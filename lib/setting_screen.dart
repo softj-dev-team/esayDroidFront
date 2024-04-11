@@ -26,7 +26,13 @@ class SettingScreen extends StatefulWidget {
 }
 final TextEditingController searchStringController = TextEditingController();
 final TextEditingController targetTitleStringController = TextEditingController();
-
+final TextEditingController _wifiNameController = TextEditingController();
+final TextEditingController _wifiPasswordController = TextEditingController();
+final TextEditingController _ipController = TextEditingController();
+final TextEditingController _gatewayController = TextEditingController();
+final TextEditingController _maskbitController = TextEditingController();
+final TextEditingController _dns1Controller = TextEditingController();
+final TextEditingController _dns2Controller = TextEditingController();
 class _SettingScreenState extends State<SettingScreen> {
   // Creating an instance of AdbShellCommand
   AdbShellCommand adbShellCommand = AdbShellCommand();
@@ -56,11 +62,126 @@ class _SettingScreenState extends State<SettingScreen> {
     super.initState();
     loadData();
     _loadDirectory();
+    _wifiNameController.text = "esaydroid5G";
+    _wifiPasswordController.text = "!1qazsoftj";
+    _ipController.text = "211.50.174.145-211.50.174.152";
+    _gatewayController.text = "211.50.174.129";
+    _maskbitController.text = "25";
+    _dns1Controller.text = "203.248.252.2";
+    _dns2Controller.text = "164.124.101.2";
   }
 
   GlobalKey inputKey = GlobalKey();
   // GlobalKey를 선언하여 IconButton의 위치와 크기를 추적합니다.
   GlobalKey _menuKey = GlobalKey();
+
+  String wifiName = '';
+  String wifiPassword = '';
+  String ip='';
+  String gateway='';
+  String maskbit='';
+  String dns1='';
+  String dns2='';
+
+
+  void _wifiConfigPopup(BuildContext context) async {
+
+    await showDialog<String>(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Wi-Fi 설정'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: <Widget>[
+              TextField(
+                controller: _wifiNameController,
+                onChanged: (value) {
+                  wifiName = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "Wi-Fi 이름",
+                ),
+              ),
+              TextField(
+                controller: _wifiPasswordController,
+                onChanged: (value) {
+                  wifiPassword = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "비밀번호",
+                ),
+                obscureText: true, // 비밀번호 숨김 처리
+              ),
+              TextField(
+                controller: _ipController,
+                onChanged: (value) {
+                  ip = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "IP 192.168.0.1-192.168.0.10",
+                ),
+              ),
+              TextField(
+                controller: _gatewayController,
+                onChanged: (value) {
+                  gateway = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "게이트웨이",
+                ),
+              ),
+              TextField(
+                controller: _maskbitController,
+                onChanged: (value) {
+                  maskbit = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "네트워크식별자길이",
+                ),
+              ),
+              TextField(
+                controller: _dns1Controller,
+                onChanged: (value) {
+                  dns1 = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "dns",
+                ),
+              ),
+              TextField(
+                controller: _dns2Controller,
+                onChanged: (value) {
+                  dns2 = value;
+                },
+                decoration: InputDecoration(
+                  hintText: "보조 dns",
+                ),
+              ),
+            ],
+          ),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('취소'),
+              onPressed: () {
+                Navigator.pop(context, 'Cancel');
+              },
+            ),
+            TextButton(
+              child: const Text('실행'),
+              onPressed: () async {
+                // Wi-Fi 이름과 비밀번호를 처리하는 로직을 여기에 추가
+                await runWifiConfigCommand();
+                Navigator.pop(context, 'Save');
+                // runWifiConfigCommand();
+              },
+            ),
+
+          ],
+        );
+      },
+    );
+  }
   // 팝업 메뉴를 표시하는 함수
   void _showPopupMenu(BuildContext context) async {
     // GlobalKey를 사용하여 IconButton의 위치와 크기를 가져옵니다.
@@ -112,6 +233,36 @@ class _SettingScreenState extends State<SettingScreen> {
             onTap: () {
               assembleAndroidTest();
               Navigator.pop(context);
+            },
+          ),
+        ),
+        PopupMenuItem<String>(
+          child: ListTile(
+            leading: Icon(Icons.wifi),
+            title: Text('Wifi 고정IP'),
+            onTap: () {
+              _wifiConfigPopup(context);
+              // Navigator.pop(context);
+            },
+          ),
+        ),
+        PopupMenuItem<String>(
+          child: ListTile(
+            leading: Icon(FontAwesomeIcons.google),
+            title: Text('계정설정'),
+            onTap: () async{
+              await runGoogleAccountTest();
+              // Navigator.pop(context);
+            },
+          ),
+        ),
+        PopupMenuItem<String>(
+          child: ListTile(
+            leading: Icon(FontAwesomeIcons.lockOpen),
+            title: Text('잠금화면 풀기'),
+            onTap: () async {
+              await runScreenLockDisable();
+              // Navigator.pop(context);
             },
           ),
         ),
@@ -186,7 +337,7 @@ class _SettingScreenState extends State<SettingScreen> {
                   mainAxisSize: MainAxisSize.min, // Row의 크기를 자식의 크기에 맞춤
                   children: <Widget>[
                     Text(
-                      '검색어와 타겟영상제목을 입력하고',
+                      '제목을 입력하고',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -252,8 +403,8 @@ class _SettingScreenState extends State<SettingScreen> {
                       ),
                       IconButton(
                         icon: Icon(Icons.play_arrow_sharp),
-                        onPressed: () {
-                          runCommand();
+                        onPressed: () async {
+                          await runCommand();
                         },
                         tooltip: '작업시작',
                       ),
@@ -306,7 +457,7 @@ class _SettingScreenState extends State<SettingScreen> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text("타겟영상제목: ${record['title']}", style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text("제목: ${record['title']}", style: TextStyle(fontWeight: FontWeight.bold)),
                           Text("검색어: ${record['keyword']}"),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -395,7 +546,7 @@ class _SettingScreenState extends State<SettingScreen> {
           child: TextField(
             controller: targetTitleStringController,
             decoration: InputDecoration(
-              labelText: '타겟영상제목',
+              labelText: '제목',
               // border: OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(FontAwesomeIcons.paperPlane, color: Colors.blue[900]), // 아이콘 색상을 진한 블루로 설정
@@ -451,6 +602,181 @@ class _SettingScreenState extends State<SettingScreen> {
       }
     } catch (e) {
       showCustomToast(context, inputKey, "네트워크 오류: $e");
+    }
+  }
+  Future<void> runWifiConfigCommand() async {
+    logger.i('runWifiConfigCommand start');
+      if (_selectedDirectory == null) {
+        showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
+        return;
+      }
+    // 선택된 장치 목록을 콤마로 구분된 문자열로 변환
+    String deviceListString = selectedDevices.join(',');
+    // String workingDirectory = _selectedDirectory ?? "."; // 널 체크 추가
+
+    try {
+      // 비동기적으로 프로세스 시작
+      final process = await Process.start(
+        'cmd',
+        [
+          '/c', 'gradlew', 'runWifiConfigTests',
+          '-PdeviceList=$deviceListString',
+          '-PipRange=${_ipController.text}', // TextEditingController의 text 속성을 사용
+          '-Pgateway=${_gatewayController.text}',
+          '-Pmaskbit=${_maskbitController.text}',
+          '-Pdns1=${_dns1Controller.text}',
+          '-Pdns2=${_dns2Controller.text}',
+          '-PwifiName=${_wifiNameController.text}',
+          '-PwifiPassword=${_wifiPasswordController.text}'
+        ],
+          workingDirectory: _selectedDirectory
+        // runInShell: true,
+      );
+
+      // stdout 스트림을 듣습니다.
+      process.stdout
+          .transform(utf8.decoder)
+          .transform(LineSplitter())
+          .listen((line) {
+        logger.d('stdout: $line');
+      });
+
+      // stderr 스트림을 듣습니다.
+      process.stderr
+          .transform(utf8.decoder)
+          .transform(LineSplitter())
+          .listen((line) {
+        logger.e('stderr: $line');
+      });
+
+      // 프로세스 종료를 기다립니다.
+      var exitCode = await process.exitCode;
+      logger.i('exit code: $exitCode');
+
+      if (exitCode == 0) {
+        // 명령어 실행이 성공한 경우
+        logger.i("성공");
+      } else {
+        // 명령어 실행에 실패한 경우
+        logger.i("실패");
+      }
+    } catch (e, stacktrace) {
+      logger.e('프로세스 실행 중 오류 발생: $e, Stacktrace: $stacktrace');
+    }
+  }
+  Future<void> runScreenLockDisable() async {
+    logger.i('runScreenLockDisable start');
+    if (_selectedDirectory == null) {
+      showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
+      return;
+    }
+    // 선택된 장치 목록을 콤마로 구분된 문자열로 변환
+    String deviceListString = selectedDevices.join(',');
+    // String workingDirectory = _selectedDirectory ?? "."; // 널 체크 추가
+
+    try {
+      // 비동기적으로 프로세스 시작
+      final process = await Process.start(
+          'cmd',
+          [
+            '/c', 'gradlew', 'runScreenLockdiable',
+            '-PdeviceList=$deviceListString',
+          ],
+          workingDirectory: _selectedDirectory
+        // runInShell: true,
+      );
+
+      // stdout 스트림을 듣습니다.
+      process.stdout
+          .transform(utf8.decoder)
+          .transform(LineSplitter())
+          .listen((line) {
+        logger.d('stdout: $line');
+      });
+
+      // stderr 스트림을 듣습니다.
+      process.stderr
+          .transform(utf8.decoder)
+          .transform(LineSplitter())
+          .listen((line) {
+        logger.e('stderr: $line');
+      });
+
+      // 프로세스 종료를 기다립니다.
+      var exitCode = await process.exitCode;
+      logger.i('exit code: $exitCode');
+
+      if (exitCode == 0) {
+        // 명령어 실행이 성공한 경우
+        logger.i("성공");
+      } else {
+        // 명령어 실행에 실패한 경우
+        logger.i("실패");
+      }
+    } catch (e, stacktrace) {
+      logger.e('프로세스 실행 중 오류 발생: $e, Stacktrace: $stacktrace');
+    }
+  }
+  // Future<void> runWifiConfigCommand() async {
+  //   logger.i('runWifiConfigCommand start');
+  //   if (_selectedDirectory == null) {
+  //     showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
+  //     return;
+  //   }
+  //   // 선택된 장치 목록을 콤마로 구분된 문자열로 변환
+  //   String deviceListString = selectedDevices.join(',');
+  //   try {
+  //
+  //     ProcessResult result = await Process.run(
+  //         'cmd',
+  //         ['/c', 'gradlew', 'runWifiConfigTests', '-PdeviceList=$deviceListString','-PipRange=$ip', '-Pgateway=$gateway', '-Pmaskbit=$maskbit', '-Pdns1=$dns1', '-Pdns2=$dns2', '-PwifiName=$wifiName','-PwifiPassword=$wifiPassword'],
+  //         workingDirectory: _selectedDirectory
+  //     );
+  //     logger.d('result.exitCode: ${result.exitCode}');
+  //     if (result.exitCode == 0) {
+  //       // 명령어 실행이 성공한 경우
+  //       showCustomToast(context, inputKey,"성공: ${result.stdout}");
+  //       logger.e('result.stdout: ${result.stdout}');
+  //     } else {
+  //       // 명령어 실행에 실패한 경우
+  //       showCustomToast(context, inputKey, "wifi 설정 실패");
+  //       logger.e('result.stderr: ${result.stderr}');
+  //     }
+  //   } catch (e) {
+  //     print('Error: $e');
+  //     logger.e('Error: $e');
+  //     // showCustomToast(context, inputKey, '오류: $e');
+  //   }
+  // }
+
+  Future<void> runGoogleAccountTest() async {
+    logger.i('runGoogleAccountTest start');
+    if (_selectedDirectory == null) {
+      showCustomToast(context, inputKey,"경로를 먼저 선택해주세요.");
+      return;
+    }
+    // 선택된 장치 목록을 콤마로 구분된 문자열로 변환
+    String deviceListString = selectedDevices.join(',');
+    try {
+
+      ProcessResult result = await Process.run(
+          'cmd',
+          ['/c', 'gradlew', 'runGoogleAccountTest', '-PdeviceList=$deviceListString'],
+          workingDirectory: _selectedDirectory
+      );
+
+      if (result.exitCode == 0) {
+        // 명령어 실행이 성공한 경우
+        showCustomToast(context, inputKey,"성공: ${result.stdout}");
+      } else {
+        // 명령어 실행에 실패한 경우
+        showCustomToast(context, inputKey, "계정 설정 실패");
+        logger.e('Error: ${result.stderr}');
+      }
+    } catch (e) {
+      print('Error: $e');
+      logger.e('Error: $e');
+      // showCustomToast(context, inputKey, '오류: $e');
     }
   }
   Future<void> runGitPulCommand() async {

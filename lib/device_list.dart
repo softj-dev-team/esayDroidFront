@@ -50,7 +50,7 @@ class _MyGridViewState extends State<MyGridView> {
   List<Map<String, dynamic>> devices = [];
   int startSwipeIndex = -1;
   int currentSwipeIndex = -1;
-
+  bool isConnected = false;
   @override
   void dispose() {
     _overlayEntry?.remove();
@@ -60,7 +60,7 @@ class _MyGridViewState extends State<MyGridView> {
   @override
   void initState() {
     super.initState();
-    fetchDevicesWithAdb();
+    tryWebSocketConnection();
   }
   void _showPopup(BuildContext context, Offset position, String deviceId) {
     _overlayEntry?.remove();
@@ -73,6 +73,33 @@ class _MyGridViewState extends State<MyGridView> {
       _overlayEntry?.remove();
       _overlayEntry = null;
     }
+  }
+  void tryWebSocketConnection() {
+    // WebSocket으로 연결 시도
+    channel = IOWebSocketChannel.connect('${GlobalConfig.wsHost}');
+
+    channel?.stream.listen(
+          (message) {
+        // 연결이 성공하고 메시지를 받으면
+        isConnected = true; // 연결 상태 업데이트
+        fetchDevicesWithWebSocket(); // WebSocket으로 디바이스 정보 가져오기
+      },
+      onDone: () {
+        // 스트림이 종료되면(연결이 끊기면) 연결 상태 확인
+        if (!isConnected) {
+          // WebSocket 연결에 실패한 경우
+          fetchDevicesWithAdb(); // ADB를 통해 디바이스 정보 가져오기
+        }
+      },
+      onError: (error) {
+        // 연결 오류 발생 시
+        isConnected = false;
+        fetchDevicesWithAdb(); // ADB를 통해 디바이스 정보 가져오기
+      },
+    );
+
+    // 서버에 연결 요청 메시지 보내기
+    channel?.sink.add(jsonEncode({"action": "List"}));
   }
   void fetchDevicesWithWebSocket() {
     channel = IOWebSocketChannel.connect('${GlobalConfig.wsHost}');

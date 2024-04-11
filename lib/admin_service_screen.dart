@@ -180,7 +180,7 @@ class _AdminServiceScreenState extends State<AdminService> {
                   mainAxisSize: MainAxisSize.min, // Row의 크기를 자식의 크기에 맞춤
                   children: <Widget>[
                     Text(
-                      '검색어와 타겟영상제목을 입력하고',
+                      '제목을 입력하고',
                       style: TextStyle(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -298,7 +298,7 @@ class _AdminServiceScreenState extends State<AdminService> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: <Widget>[
-                          Text("타겟영상제목: ${record['title']}", style: TextStyle(fontWeight: FontWeight.bold)),
+                          Text("제목: ${record['title']}", style: TextStyle(fontWeight: FontWeight.bold)),
                           Text("검색어: ${record['keyword']}"),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -548,7 +548,7 @@ class _AdminServiceScreenState extends State<AdminService> {
           child: TextField(
             controller: targetTitleStringController,
             decoration: InputDecoration(
-              labelText: '타겟영상제목',
+              labelText: '제목',
               // border: OutlineInputBorder(),
               suffixIcon: IconButton(
                 icon: Icon(FontAwesomeIcons.paperPlane, color: Colors.blue[900]), // 아이콘 색상을 진한 블루로 설정
